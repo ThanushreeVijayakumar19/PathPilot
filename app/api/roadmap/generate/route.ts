@@ -36,6 +36,8 @@ Given their profile score, current skills, and skill gaps, return a JSON object 
   ]
 }
 
+CRITICAL — every single item's "description" field is REQUIRED and must NEVER be an empty string or omitted, even for items that feel self-explanatory from the title alone. If you're unsure what to write, still write at least one concrete sentence naming a specific resource, sub-topic, or what "done" looks like — never leave it blank.
+
 CRITICAL — scale the starting point to their ACTUAL level, given by their score below:
 - Score under 35 (true beginner, few/no confident skills): Phase 1 MUST start from genuine fundamentals
   for their target field (e.g. programming basics, not frameworks) — do NOT assume they already know
@@ -49,6 +51,23 @@ should have 3-5 items and a realistic duration_estimate. Base the plan on their 
 current skills — never assume a skill they didn't list, even if it's "obviously related."
 "type" must be one of: "skill" (a skill/technology to learn), "course" (a specific course/tutorial to take),
 "project" (a project to build for their portfolio), or "cert" (a certification to earn).`
+
+const TYPE_FALLBACKS: Record<string, string> = {
+  skill: 'Look up beginner-friendly resources for this and practice it hands-on until you could explain it or use it unsupervised.',
+  course: 'Search for this course/topic on a platform like Coursera, YouTube, or freeCodeCamp and complete it end to end.',
+  project: 'Scope a small, concrete version of this project, build it, and add it to your portfolio with a short write-up.',
+  cert: 'Look up this certification, review its syllabus, and work through the official prep materials before attempting it.',
+}
+
+function withFallbackDescription(item: { title: string; type: string; description: string }) {
+  if (item.description && item.description.trim().length > 0) return item
+  return {
+    ...item,
+    description:
+      TYPE_FALLBACKS[item.type] ||
+      `Research "${item.title}" and work through it step by step — start with an overview, then practice or build something small with it.`,
+  }
+}
 
 export async function POST() {
   const supabase = await createClient()
@@ -113,18 +132,21 @@ Skill gaps to close: ${(skillGaps ?? []).map((g) => `${g.skill} (${g.importance}
   await supabase.from('roadmap_items').delete().eq('user_id', user.id)
 
   const rows = result.phases.flatMap((phase, phaseIdx) =>
-    phase.items.map((item, itemIdx) => ({
-      user_id: user.id,
-      phase: phase.phase,
-      phase_title: phase.duration_estimate
-        ? `${phase.phase_title} · ${phase.duration_estimate}`
-        : phase.phase_title,
-      title: item.title,
-      item_type: item.type,
-      description: item.description || '',
-      order_index: phaseIdx * 100 + itemIdx,
-      completed: false,
-    })),
+    phase.items.map((rawItem, itemIdx) => {
+      const item = withFallbackDescription(rawItem)
+      return {
+        user_id: user.id,
+        phase: phase.phase,
+        phase_title: phase.duration_estimate
+          ? `${phase.phase_title} · ${phase.duration_estimate}`
+          : phase.phase_title,
+        title: item.title,
+        item_type: item.type,
+        description: item.description,
+        order_index: phaseIdx * 100 + itemIdx,
+        completed: false,
+      }
+    }),
   )
 
   const { error: insertError } = await supabase.from('roadmap_items').insert(rows)

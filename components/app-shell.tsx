@@ -104,7 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </NotificationsMenu>
 
               <Link
-                href="/dashboard"
+                href="/profile"
                 className="flex items-center gap-2.5 rounded-xl border border-border bg-card/60 py-1.5 pl-1.5 pr-3 transition-colors hover:bg-muted"
               >
                 <span className="brand-gradient flex size-7 items-center justify-center rounded-lg text-xs font-bold text-primary-foreground">

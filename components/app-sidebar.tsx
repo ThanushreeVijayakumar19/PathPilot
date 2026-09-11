@@ -12,6 +12,7 @@ import {
   Route,
   Sparkles,
   Upload,
+  UserCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { student } from '@/lib/data'
@@ -20,6 +21,7 @@ import { AiraMascot } from '@/components/mascot'
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profile', label: 'My Profile', icon: UserCircle },
   { href: '/resume', label: 'Resume Upload', icon: Upload },
   { href: '/analysis', label: 'Resume Analysis', icon: FileText },
   { href: '/recommendations', label: 'Recommendations', icon: Sparkles },
@@ -124,17 +126,23 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
 
         <div className="mt-4 flex items-center gap-3 rounded-xl px-2 py-2">
-          <span className="brand-gradient flex size-9 items-center justify-center rounded-full text-xs font-bold text-primary-foreground">
-            {account?.initials ?? student.initials}
-          </span>
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-semibold">
-              {account?.name ?? student.name}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {account?.email || student.role}
-            </p>
-          </div>
+          <Link
+            href="/profile"
+            onClick={onNavigate}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-opacity hover:opacity-80"
+          >
+            <span className="brand-gradient flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground">
+              {account?.initials ?? student.initials}
+            </span>
+            <span className="min-w-0 flex-1 leading-tight">
+              <span className="block truncate text-sm font-semibold">
+                {account?.name ?? student.name}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {account?.email || student.role}
+              </span>
+            </span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"

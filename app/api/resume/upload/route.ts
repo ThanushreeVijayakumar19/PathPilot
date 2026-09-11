@@ -50,10 +50,11 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { fileName, storagePath, rawText } = body as {
+  const { fileName, storagePath, rawText, targetCareerRole } = body as {
     fileName?: string
     storagePath?: string
     rawText?: string
+    targetCareerRole?: string
   }
 
   if (!fileName || !storagePath || !rawText || rawText.trim().length < 30) {
@@ -104,7 +105,15 @@ export async function POST(request: Request) {
   //    semantic recommendation matching) and detect skill gaps
   //    deterministically against the curated taxonomy for their inferred role.
   const extractedSkills = analysis.extracted_skills ?? []
-  const careerRole = analysis.inferred_career_role || 'Other'
+  const aiInferredRole = analysis.inferred_career_role || 'Other'
+  // If the student explicitly told us which career they're targeting,
+  // that takes priority over AIRA's guess from the resume text — skill
+  // gaps, recommendations and the roadmap should all be built against
+  // the role they actually want, not just what the resume looks like.
+  const careerRole =
+    targetCareerRole && targetCareerRole in CAREER_SKILL_TAXONOMY
+      ? targetCareerRole
+      : aiInferredRole
 
   const { gaps, candidateEmbeddings } = await detectSkillGaps(extractedSkills, careerRole)
 

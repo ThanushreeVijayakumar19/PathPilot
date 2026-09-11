@@ -18,8 +18,9 @@ import { cn } from '@/lib/utils'
 import { AiraMascot } from '@/components/mascot'
 import { createClient } from '@/lib/supabase/client'
 import { extractTextFromPdf } from '@/lib/pdf'
+import { CAREER_SKILL_TAXONOMY } from '@/lib/career-skills'
 
-type Stage = 'idle' | 'ready' | 'scanning' | 'done' | 'error'
+type Stage = 'idle' | 'ready' | 'career' | 'scanning' | 'done' | 'error'
 
 const scanSteps = [
   'Extracting text from your PDF',
@@ -28,11 +29,15 @@ const scanSteps = [
   'Scoring & finding skill gaps',
 ]
 
+const AUTO_DETECT = ''
+const careerRoleOptions = Object.keys(CAREER_SKILL_TAXONOMY)
+
 export default function ResumeUploadPage() {
   const router = useRouter()
   const [stage, setStage] = useState<Stage>('idle')
   const [dragging, setDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [targetCareerRole, setTargetCareerRole] = useState(AUTO_DETECT)
   const [activeStep, setActiveStep] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -93,6 +98,7 @@ export default function ResumeUploadPage() {
           fileName: file.name,
           storagePath,
           rawText,
+          targetCareerRole,
         }),
       })
 
@@ -238,6 +244,33 @@ export default function ResumeUploadPage() {
                   Upload PDF
                 </Button>
               </div>
+
+              {file && (
+                <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+                  <label className="mb-1.5 block text-xs font-semibold">
+                    Which career are you targeting?
+                  </label>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    AIRA uses this to check your skill gaps and build your
+                    roadmap against the right role. Leave it on
+                    &quot;Let AIRA decide&quot; if you&apos;re not sure yet.
+                  </p>
+                  <select
+                    value={targetCareerRole}
+                    onChange={(e) => setTargetCareerRole(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary/50 focus:ring-3 focus:ring-primary/15"
+                  >
+                    <option value={AUTO_DETECT}>
+                      Let AIRA decide based on my resume
+                    </option>
+                    {careerRoleOptions.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Link

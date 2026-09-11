@@ -31,6 +31,7 @@ export async function groqGenerateJSON<T>(
         { role: 'user', content: prompt },
       ],
       response_format: { type: 'json_object' },
+      max_tokens: 4096,
     }),
   })
 
