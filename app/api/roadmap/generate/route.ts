@@ -9,6 +9,7 @@ interface RoadmapPhase {
   items: {
     title: string
     type: 'skill' | 'course' | 'project' | 'cert'
+    description: string
   }[]
 }
 
@@ -25,7 +26,11 @@ Given their profile score, current skills, and skill gaps, return a JSON object 
       "phase_title": "<short phase name, e.g. 'Programming Fundamentals' or 'Strengthen Core Skills'>",
       "duration_estimate": "<realistic time to complete this phase, e.g. '2-3 weeks'>",
       "items": [
-        {"title": "<specific actionable item, e.g. 'Learn Docker basics'>", "type": "skill" | "course" | "project" | "cert"}
+        {
+          "title": "<SHORT specific item name only, e.g. 'Docker basics' or 'Titanic dataset EDA project' — do NOT put full study instructions here>",
+          "type": "skill" | "course" | "project" | "cert",
+          "description": "<2-4 sentences of CONCRETE guidance on exactly what to study/build and how: specific sub-topics to cover, a specific dataset/tool/platform name where relevant, and what 'done' looks like for this item. This is what the student reads to know what to actually do — be specific, not generic.>"
+        }
       ]
     }
   ]
@@ -116,6 +121,7 @@ Skill gaps to close: ${(skillGaps ?? []).map((g) => `${g.skill} (${g.importance}
         : phase.phase_title,
       title: item.title,
       item_type: item.type,
+      description: item.description || '',
       order_index: phaseIdx * 100 + itemIdx,
       completed: false,
     })),

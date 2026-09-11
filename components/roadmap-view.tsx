@@ -9,6 +9,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  ChevronDown,
   FolderGit2,
   Loader2,
   Sparkles,
@@ -32,6 +33,7 @@ export interface RoadmapItem {
   id: string
   title: string
   item_type: keyof typeof typeMeta
+  description: string
   completed: boolean
 }
 
@@ -56,6 +58,16 @@ export function RoadmapView({
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const [items, setItems] = useState(phases)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  function toggleExpanded(itemId: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(itemId)) next.delete(itemId)
+      else next.add(itemId)
+      return next
+    })
+  }
 
   async function generate() {
     setGenerating(true)
@@ -308,47 +320,76 @@ export function RoadmapView({
                     {stage.items.map((item) => {
                       const meta = typeMeta[item.item_type] ?? typeMeta.skill
                       const Icon = meta.icon
+                      const isOpen = expanded.has(item.id)
                       return (
-                        <button
+                        <div
                           key={item.id}
-                          onClick={() => toggleItem(i, item.id)}
-                          title={item.title}
                           className={cn(
-                            'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors',
+                            'rounded-xl border transition-colors',
                             item.completed
                               ? 'border-primary/20 bg-primary/[0.04]'
                               : 'border-border hover:bg-muted/40',
                           )}
                         >
-                          <span
-                            className={cn(
-                              'flex size-8 shrink-0 items-center justify-center rounded-lg',
-                              item.completed
-                                ? 'brand-gradient text-primary-foreground'
-                                : 'bg-muted text-muted-foreground',
-                            )}
-                          >
-                            {item.completed ? (
-                              <Check className="size-4" />
-                            ) : (
-                              <Icon className="size-4" />
-                            )}
-                          </span>
-                          <div className="min-w-0">
-                            <p
+                          <div className="flex items-start gap-3 p-3">
+                            {/* Separate checkbox: this is the ONLY thing that marks complete */}
+                            <button
+                              type="button"
+                              onClick={() => toggleItem(i, item.id)}
+                              title={item.completed ? 'Mark as not done' : 'Mark as done'}
                               className={cn(
-                                'text-sm font-medium leading-snug',
-                                item.completed &&
-                                  'text-muted-foreground line-through',
+                                'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+                                item.completed
+                                  ? 'brand-gradient text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground hover:bg-muted-foreground/20',
                               )}
                             >
-                              {item.title}
-                            </p>
-                            <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-                              {meta.label}
-                            </p>
+                              {item.completed ? (
+                                <Check className="size-4" />
+                              ) : (
+                                <Icon className="size-4" />
+                              )}
+                            </button>
+
+                            {/* Tapping the title/body opens the details, it does NOT mark complete */}
+                            <button
+                              type="button"
+                              onClick={() => toggleExpanded(item.id)}
+                              title="Tap for details"
+                              className="flex min-w-0 flex-1 items-start justify-between gap-2 text-left"
+                            >
+                              <div className="min-w-0">
+                                <p
+                                  className={cn(
+                                    'text-sm font-medium leading-snug',
+                                    item.completed &&
+                                      'text-muted-foreground line-through',
+                                  )}
+                                >
+                                  {item.title}
+                                </p>
+                                <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                                  {meta.label}
+                                </p>
+                              </div>
+                              <ChevronDown
+                                className={cn(
+                                  'mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform',
+                                  isOpen && 'rotate-180',
+                                )}
+                              />
+                            </button>
                           </div>
-                        </button>
+
+                          {isOpen && (
+                            <div className="border-t border-border/60 px-3 py-2.5 pl-14">
+                              <p className="text-sm text-muted-foreground">
+                                {item.description ||
+                                  'No extra detail was provided for this item — regenerate your roadmap to get one.'}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       )
                     })}
                   </div>

@@ -49,6 +49,7 @@ export default async function RoadmapPage() {
       id: item.id,
       title: item.title,
       item_type: item.item_type ?? 'skill',
+      description: item.description ?? '',
       completed: item.completed,
     })
   }
