@@ -312,8 +312,9 @@ export function RoadmapView({
                         <button
                           key={item.id}
                           onClick={() => toggleItem(i, item.id)}
+                          title={item.title}
                           className={cn(
-                            'flex items-center gap-3 rounded-xl border p-3 text-left transition-colors',
+                            'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors',
                             item.completed
                               ? 'border-primary/20 bg-primary/[0.04]'
                               : 'border-border hover:bg-muted/40',
@@ -336,14 +337,14 @@ export function RoadmapView({
                           <div className="min-w-0">
                             <p
                               className={cn(
-                                'truncate text-sm font-medium',
+                                'text-sm font-medium leading-snug',
                                 item.completed &&
                                   'text-muted-foreground line-through',
                               )}
                             >
                               {item.title}
                             </p>
-                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
                               {meta.label}
                             </p>
                           </div>

@@ -210,7 +210,12 @@ BASELINE SCORE (computed from the above, use as your anchor): ${baselineScore}`
     )
   }
 
-  const gapSuggestions = await generateGapSuggestions(gaps, careerRole || 'Other')
+  const gapSuggestions = await generateGapSuggestions(
+    gaps,
+    careerRole || 'Other',
+    analysis.extracted_skills ?? candidateSkillNames,
+    (analysis.projects ?? []).map((p) => p.name),
+  )
   await supabase.from('skill_gaps').delete().eq('user_id', user.id)
   if (gapSuggestions.length) {
     await supabase.from('skill_gaps').insert(

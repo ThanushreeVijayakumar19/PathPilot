@@ -108,6 +108,12 @@ export async function POST(request: Request) {
 
   const { gaps, candidateEmbeddings } = await detectSkillGaps(extractedSkills, careerRole)
 
+  // 3b. Keep the profile's track in sync with what the resume was actually
+  //     inferred to be for, so the dashboard (and anything else reading
+  //     profile.track) reflects the resume-based analysis, not just the
+  //     manual Profile Builder flow.
+  await supabase.from('profiles').update({ track: careerRole }).eq('id', user.id)
+
   // 4. Save the analysis
   const { data: savedAnalysis, error: analysisError } = await supabase
     .from('resume_analysis')
@@ -138,7 +144,12 @@ export async function POST(request: Request) {
   }
 
   // 5. Generate targeted suggestions for the confirmed gaps and save them
-  const gapSuggestions = await generateGapSuggestions(gaps, careerRole)
+  const gapSuggestions = await generateGapSuggestions(
+    gaps,
+    careerRole,
+    extractedSkills,
+    (analysis.projects ?? []).map((p) => p.name),
+  )
   await supabase.from('skill_gaps').delete().eq('user_id', user.id)
   if (gapSuggestions.length) {
     await supabase.from('skill_gaps').insert(

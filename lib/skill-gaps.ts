@@ -78,6 +78,16 @@ export async function detectSkillGaps(
 }
 
 const RESOURCE_SUGGESTION_PROMPT = `You are AIRA, an AI career copilot. You've already determined a student's exact skill gaps for their target career role — your only job now is to write ONE concrete, specific, actionable suggestion for closing each gap (a real project idea, a specific free course/platform, or a certification). Do not change the skill list or importance given to you.
+
+You will also be given the student's CURRENT skills and existing projects. Use these actively:
+- Prefer suggestions that build on or extend what they already know/have built, instead of generic
+  "take this course" advice that could apply to anyone. e.g. if they already have a project using
+  pandas, suggest extending THAT project to close the gap, not an unrelated starter project.
+- Reference their existing skills or projects by name in the suggestion where it makes the advice more
+  concrete and personal.
+- Only fall back to a from-scratch course/project recommendation when nothing in their current
+  background gives a natural way to close that specific gap.
+
 Return a JSON object with EXACTLY this shape:
 { "suggestions": [{"skill": "<matches the skill given>", "resource_suggestion": "<your specific suggestion>"}] }`
 
@@ -86,10 +96,16 @@ Return a JSON object with EXACTLY this shape:
  * actionable suggestion for each one. Since the gap itself is already
  * certain (not being guessed), this produces much more useful, targeted
  * suggestions than asking the AI to invent both the gap and the advice.
+ *
+ * currentSkills/existingProjects ground the suggestion in what the student
+ * has already done, so advice builds on their real background instead of
+ * reading like generic, one-size-fits-all course recommendations.
  */
 export async function generateGapSuggestions(
   gaps: { skill: string; importance: 'high' | 'medium' }[],
   careerRole: string,
+  currentSkills: string[] = [],
+  existingProjects: string[] = [],
 ): Promise<SkillGapResult[]> {
   if (!gaps.length) return []
 
@@ -97,7 +113,10 @@ export async function generateGapSuggestions(
     const result = await generateJSON<{
       suggestions: { skill: string; resource_suggestion: string }[]
     }>(
-      `Target career role: ${careerRole}\nConfirmed skill gaps: ${gaps.map((g) => g.skill).join(', ')}`,
+      `Target career role: ${careerRole}
+Confirmed skill gaps: ${gaps.map((g) => g.skill).join(', ')}
+Student's current skills: ${currentSkills.join(', ') || 'none listed'}
+Student's existing projects: ${existingProjects.join('; ') || 'none listed'}`,
       RESOURCE_SUGGESTION_PROMPT,
     )
 
